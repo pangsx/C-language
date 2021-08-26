@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>淡北道路</title>
+<!--導航列設定-->
+<link rel="stylesheet" href="\media\pang\6233-6163\scripts\html_test\.html_temp\up.css">
+<!--圖片設定-->
+<link rel="stylesheet" href="/media/pang/6233-6163/scripts/html_test/.html_temp/photo.css">
+
+  </head>
+
+  <body>
+
+
+
+<!--導航列-->
+<nav class="menu"><ul>
+<li><a href=/media/pang/6233-6163/scripts/html_test/html/index.html>html</a></li>
+<li><a href=/media/pang/6233-6163/scripts/html_test/淡北/index.html>淡北</a></li>
+<li style="float:left"><p style="color:red">淡水河北側沿河平面道路工程資料庫</p></li></ul></nav>
+<div style="padding:20px;margin-top:30px;background-color:#1abc9c;height:1500px;">
