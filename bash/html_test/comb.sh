@@ -13,7 +13,8 @@ makelink(){
 	backdir=`pwd`
 	#為了做back捷徑，所以需要知道上一層目錄
 	cd $1
-	echo "<h1><a href="$backdir/index.html">back</a></h1>" >> $1/index.html
+	echo '<div id ="date" style="display:inline;font-size:25px;">' >> $1/index.html
+	echo "<a href="$backdir/index.html">上一層</a>" >> $1/index.html
 	#做back捷徑
 	#判斷要不要做下一層資料夾的捷徑。
 	checkdir=$(ls -l|grep "^d"|wc -l)
@@ -25,9 +26,10 @@ makelink(){
 		file2=$1/ftemp.tt
 		while read line2
 		do
-			echo "<h1><a href="`pwd`\\$line2\\index.html">$line2</a></h1>" >> $1/index.html
+			echo "<a href="`pwd`\\$line2\\index.html">$line2</a>" >> $1/index.html
 		done < $file2
 	fi
+	echo '</date></div><hr></hr>' >> $1/index.html
 	rm $1/*.tt > /dev/null 2>&1
 	#判斷有沒有jpg,png,gif以外的檔案，有就幫它做連結。
 	check=$(ls -cl|grep "^-"|grep -v .jpg|grep -v .png |grep -v .gif|grep -v .html|wc -l)
