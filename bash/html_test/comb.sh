@@ -1,6 +1,7 @@
 #!/bin/bash
 #1100806組合網頁的腳本，測試中。
-#1100831基本上是己經完成，但是細節要進行測試，也要幫腳本建立註解，不然寫了太久會不知道自己在寫什麼。完成了一些修正和調整，為了腳本不要誤判，名稱內不要有空格。
+#1100831基本上是己經完成，但是細節要進行測試，也要幫腳本建立註解，不然寫了太久會不知道自己在寫什麼。
+#1100924加入刪資料夾及檔名空格的功能，程式是抄別人的，高手寫的太強大了，會把空格轉成－
 #function
 #以下是建立捷徑和index.html的函數。
 makelink(){
@@ -13,8 +14,7 @@ makelink(){
 	backdir=`pwd`
 	#為了做back捷徑，所以需要知道上一層目錄
 	cd $1
-	echo '<div id ="date" style="display:inline;font-size:25px;">' >> $1/index.html
-	echo "<a href="$backdir/index.html">上一層</a>" >> $1/index.html
+	echo "<h1><a href="$backdir/index.html">back</a></h1>" >> $1/index.html
 	#做back捷徑
 	#判斷要不要做下一層資料夾的捷徑。
 	checkdir=$(ls -l|grep "^d"|wc -l)
@@ -23,13 +23,13 @@ makelink(){
 	then
 		rm $1/*.tt > /dev/null 2>&1
 		(ls -l|grep "^d"|cut -d ':' -f 2|cut -d ' ' -f 2) > $1/ftemp.tt
+
 		file2=$1/ftemp.tt
 		while read line2
 		do
-			echo "<a href="`pwd`\\$line2\\index.html">$line2</a>" >> $1/index.html
+			echo "<h1><a href="`pwd`\\$line2\\index.html">$line2</a></h1>" >> $1/index.html
 		done < $file2
 	fi
-	echo '</date></div><hr></hr>' >> $1/index.html
 	rm $1/*.tt > /dev/null 2>&1
 	#判斷有沒有jpg,png,gif以外的檔案，有就幫它做連結。
 	check=$(ls -cl|grep "^-"|grep -v .jpg|grep -v .png |grep -v .gif|grep -v .html|wc -l)
@@ -38,7 +38,8 @@ makelink(){
 		check=0
 	else	
 		rm $1/*.tt > /dev/null 2>&1
-		(ls -cl|grep "^-"|grep -v .jpg|grep -v .png |grep -v .gif|grep -v .html|grep -v .tt|cut -d ':' -f 2|cut -d ' ' -f 2) > $1/ftemp.tt
+		#(ls -cl|grep "^-"|grep -v .jpg|grep -v .png |grep -v .gif|grep -v .html|grep -v .tt|cut -d ':' -f 2|cut -d ' ' -f 2) > $1/ftemp.tt
+		(for filename in *.*;do echo $filename;done|grep -v .jpg |grep -v .png|grep -v .gif|grep -v .tt) > $1/ftemp.tt
 		file2=$1/ftemp.tt
 		while read line2
 		do
@@ -63,6 +64,19 @@ makelink(){
 	fi
 	cat $basedir/.html_temp/2back.t >> $1/index.html	
 return 1	
+}
+#1100923網路上抄來的去除空格程式，超讚
+killspace()
+{
+startDir=.
+for arg in "$@" ; do
+find $startDir \( -name "* *" -o -name "* *" \) -print |
+while read old ; do
+new=$(echo "$old" | tr -s '\011' ' ' | tr -s ' ' '-')
+mv "$old" "$new"
+done
+done
+return 1
 }
 
 
@@ -100,15 +114,16 @@ do
                         while read line
                         do
 				#進入第二層資料夾作index.html
+				killspace d f
 				li=$(echo $line|cut -d '.' -f 2)
 				echo "<li><a href="`pwd`/$line/index.html">$li</a></li>" >> index.html
 				echo "<p><a href="`pwd`/$line/index.html">$line</a></p>" >> link.temp
 				cd $line
+				killspace d f
                                 pwd >> "$basedir/dir.tt"
                                 pwd >> "$basedir/back.log"
                                 (ls -l|grep "^-")  >> "$basedir/back.log"
-                                f=$(echo $f+$(ls -l | grep "^-" | wc -l)|bc)
-				
+                                f=$(echo $f+$(ls -l | grep "^-" | wc -l)|bc)	
                                 cd $basedir
                         done < $file
 			echo '<li style="float:left"><p style="color:red">淡水河北側沿河平面道路工程資料庫</p></li></ul></nav>' >> index.html
@@ -125,7 +140,7 @@ do
                         ((j++))
                         workdir=$(sed -n "$j"p "$basedir/dir.tt")
                         cd $workdir
-            
+			killspace d f
 			n=$(ls -l|grep "^d"|wc -l)
 			#判斷目前資料夾中有無其它資料夾，且回傳的是資料夾的數量。
                         if [ $n = 0 ]
@@ -141,7 +156,8 @@ do
                                 while read line
                                 do                                      
 					makelink $workdir
-					cd $line                               	
+					cd $line
+					killspace d f
                                         pwd >> "$basedir/dir.tt"
 					makelink $workdir/$line
 					((i--))
