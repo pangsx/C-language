@@ -3,6 +3,7 @@
 #1100831基本上是己經完成，但是細節要進行測試，也要幫腳本建立註解，不然寫了太久會不知道自己在寫什麼。
 #1100924加入刪資料夾及檔名空格的功能，程式是抄別人的，高手寫的太強大了，會把空格轉成－
 #1100930修改程式變成相對路徑的版本，這樣才可以跨電腦使用。
+#1100930修正迴圈計次的bug，優化html目錄連結的排列方式，並加入按鍵風格，讓目錄和一般連結的表示方式不同。
 #function
 #以下是建立捷徑和index.html的函數。
 makelink(){
@@ -15,7 +16,8 @@ makelink(){
 	#為了做back捷徑，所以需要知道上一層目錄
 	#我後來知道，可以用../取代上一層，所以上面這些步驟就變成多餘的了。
 	#cd $1
-	echo "<h1><a href="../index.html">back</a></h1>" >> $1/index.html
+	echo '<div id = "dirs">' >> $1/index.html
+	echo "<a href="../index.html">回上層</a>" >> $1/index.html
 	#做back捷徑
 	#判斷要不要做下一層資料夾的捷徑。
 	checkdir=$(ls -l|grep "^d"|wc -l)
@@ -28,9 +30,10 @@ makelink(){
 		file2=$1/ftemp.tt
 		while read line2
 		do
-			echo "<h1><a href="`pwd`/$line2/index.html">$line2</a></h1>" >> $1/index.html
+			echo "<a href="`pwd`/$line2/index.html">$line2</a>" >> $1/index.html
 		done < $file2
 	fi
+	echo '</div><hr>' >> $1/index.html
 	rm $1/*.tt > /dev/null 2>&1
 	#判斷有沒有jpg,png,gif以外的檔案，有就幫它做連結。
 	check=$(ls -cl|grep "^-"|grep -v .jpg|grep -v .png |grep -v .gif|grep -v .html|wc -l)
@@ -86,10 +89,12 @@ makelink(){
 	echo $str1 > str.tt
 	sed -i s?\\/?\\\\/?g str.tt
 	str1=$(cat str.tt)
+	cmenu=$(grep -n menu index.html|cut -d ":" -f 1)
 	#知道要幾個../就可以做迴圈，並處理特殊字元。
-	sed -i "19 s/\.\//$str1/g" index.html
-	sed -i "20 s/\.\//$str1/g" index.html
-	sed -i "21 s/\.\//$str1/g" index.html
+	#sleep 300
+	sed -i "$(echo "$cmenu+1"|bc -l) s/\.\//$str1/g" index.html
+	sed -i "$(echo "$cmenu+2"|bc -l) s/\.\//$str1/g" index.html
+	sed -i "$(echo "$cmenu+3"|bc -l) s/\.\//$str1/g" index.html
 	#結束的圖也要做連結，所以下面會找到需要的行數，再做替換，但是要注意，未來如果要加設計或廠商的圖或字，這部份就要看看有沒有要調整。
 	logo=$(grep -n \<footer\> index.html|cut -d ":" -f 1)
 	sed -i "$logo s/\.\//$str1/g" index.html
@@ -153,6 +158,10 @@ echo 'div.img {    margin: 5px;    border: 1px solid #ccc;    float: left;    wi
 echo 'div.img:hover {    border: 1px solid #777;}' >> hhead
 echo 'div.img img {    width: 100%;    height: auto;}' >> hhead
 echo 'div.desc {    padding: 15px;    text-align: center;}' >> hhead
+
+echo '#dirs a {display: inline-block;font-size:22px;    }' >> hhead
+echo '#dirs a { color: #4D2078; PADDING-RIGHT: 2px; PADDING-LEFT: 2px; PADDING-BOTTOM: 2px; PADDING-TOP: 2px; background-color:#EEEBFF; height: 28px; width: 180px; text-align: center; ; border: #A498BD; border-style: outset; border-top-width: 2px; border-right-width: 2px; border-bottom-width: 2px; border-left-width: 2px;overflow: hidden; white-space: nowrap;}' >> hhead
+echo '#dirs a:hover { BORDER-RIGHT: ##605080 1px outset; PADDING-RIGHT: 2px; BORDER-TOP: #605080 1px outset; PADDING-LEFT: 2px; PADDING-BOTTOM: 2px; BORDER-LEFT: #605080 1px outset; PADDING-TOP: 2px; BORDER-BOTTOM: #605080 1px outset;background-color:#BDAAE2; height: 28px; width: 180px; text-align: center; }' >> hhead
 echo '</style>' >> hhead
 echo '</head>' >> hhead
 echo '<body>' >> hhead
@@ -211,6 +220,7 @@ do
                 *)
 			#其它層的資料夾可以統一處理。
                         ((j++))
+			echo $i,$j
                         workdir=$(sed -n "$j"p "$basedir/dir.t")
                         cd $workdir
 			killspace d f
@@ -228,14 +238,15 @@ do
                                 file=temp.tt
                                 while read line
                                 do                                      
-					makelink $workdir
+					makelink $workdir					
 					cd $line
 					killspace d f
                                         pwd >> "$basedir/dir.t"
-					makelink $workdir/$line
-					((i--))
- 					cd ..
+					#makelink $workdir/$line
+					#((i--))
+ 					cd $workdir
                                 done < $file
+				((i--))
                                 rm *.tt > /dev/null 2>&1
 
                         fi
